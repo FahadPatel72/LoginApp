@@ -28,43 +28,6 @@ exports.signup = async (req, res) => {
   res.status(201).json({ message: 'User created successfully' });
 };
 
-
-exports.login = async (req, res) => {
-  const { username, password } = req.body;
-
-  
-  const user = await User.findOne({ username });
-  if (!user) return res.status(400).json({ error: 'User not found' });
-
-  
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
-
-  
-  const loggedInUsers = await Session.find().sort({ loggedInAt: 1 });
-
-  if (loggedInUsers.length >= MAX_LOGGED_IN_USERS) {
-    
-    const firstLoggedInUser = loggedInUsers[0];
-    await Session.deleteOne({ userId: firstLoggedInUser.userId });
-    console.log(`User ${firstLoggedInUser.username} has been logged out`);
-  }
-
-  
-  const newSession = new Session({
-    userId: user._id,
-    username: user.username,
-    loggedInAt: new Date(),
-  });
-  await newSession.save();
-
-  
-  const token = jwt.sign({ userId: user._id, username: user.username }, JWT_SECRET, { expiresIn: '1h' });
-
-  res.json({ message: 'Logged in successfully', token });
-};
-
-
 exports.login = async (req, res) => {
   const { username, password } = req.body;
 
